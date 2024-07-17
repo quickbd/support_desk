@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:logger/logger.dart'; // Import the logger package
 
 import '../utils/config.dart';
-  // Import the config file for API URL
 
 class AuthProvider with ChangeNotifier {
+  final Logger _logger = Logger(); // Create a logger instance
+
   String? _token;
   String? _userId;
   String? _name;
@@ -29,9 +31,9 @@ class AuthProvider with ChangeNotifier {
         },
       );
 
-      print('Login Status Code: ${response.statusCode}'); // Print status code
+      _logger.d('Login Status Code: ${response.statusCode}'); // Log status code
 
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         final data = responseData['data'];
 
@@ -53,10 +55,10 @@ class AuthProvider with ChangeNotifier {
         throw Exception('Failed to login');
       }
     } catch (error) {
-      rethrow; // Rethrow the caught error to maintain the original stack trace
+      _logger.e('Error during login: $error');
+      rethrow;
     }
   }
-
 
   Future<void> logout() async {
     _token = null;
@@ -99,16 +101,22 @@ class AuthProvider with ChangeNotifier {
   Future<Map<String, dynamic>?> getUserDetails() async {
     if (_token == null) return null;
 
-    final response = await http.get(
-      Uri.parse('${AppConfig.apiUrl}user/$_userId'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.apiUrl}user/$_userId'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        _logger.w('Failed to fetch user details. Status code: ${response.statusCode}');
+        return null;
+      }
+    } catch (error) {
+      _logger.e('Error fetching user details: $error');
       return null;
     }
   }

@@ -40,7 +40,7 @@ dependencies:
   get: ^4.6.6
   #image picker
   image_picker: ^1.0.5
-
+  logger: ^1.0.0
   line_icons: ^2.0.2
   #core
   firebase_core: ^2.24.2
