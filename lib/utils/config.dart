@@ -1,4 +1,4 @@
 class AppConfig{
   static String appName='Help Desk';
-  static const String apiUrl = 'http://localhost/ticketing/api/';
+  static const String apiUrl = 'https://support.quickbd.net/api/';
 }
