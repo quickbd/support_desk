@@ -55,6 +55,7 @@ print(response.body);
         throw Exception('Failed to login: ${errorResponse['message']}');
       }
     } catch (error) {
+      print(error);
       _logger.e('Error during login: $error');
       rethrow; // Rethrow the caught error to maintain the original stack trace
     }
