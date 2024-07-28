@@ -24,8 +24,9 @@ class AuthProvider with ChangeNotifier {
   Future<void> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.apiUrl}login'),
-        headers: {'Content-Type': 'application/json'}, // Add headers
+        Uri.https('support.quickbd.net','api/login'),
+        headers: {'Content-Type': 'application/json',"Access-Control-Allow-Origin": "header",
+          'Accept': '*/*'}, // Add headers
         body: json.encode({'email': email, 'password': password}),
       );
 print(response.body);
