@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:logger/logger.dart'; // Import the logger package
+import 'package:logger/logger.dart';
 
 import '../utils/config.dart';
 
@@ -24,14 +24,13 @@ class AuthProvider with ChangeNotifier {
   Future<void> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.apiUrl}login'), // Use apiUrl from config file
-        body: {
-          'email': email,
-          'password': password,
-        },
+        Uri.parse('${AppConfig.apiUrl}login'),
+        headers: {'Content-Type': 'application/json'}, // Add headers
+        body: json.encode({'email': email, 'password': password}),
       );
-
-      _logger.d('Login Status Code: ${response.statusCode}'); // Log status code
+print(response.body);
+      _logger.i('Login Status Code: ${response.statusCode}'); // Log status code
+      _logger.i('Login Response Body: ${response.body}'); // Log response body
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -52,11 +51,12 @@ class AuthProvider with ChangeNotifier {
 
         notifyListeners();
       } else {
-        throw Exception('Failed to login');
+        final errorResponse = json.decode(response.body);
+        throw Exception('Failed to login: ${errorResponse['message']}');
       }
     } catch (error) {
       _logger.e('Error during login: $error');
-      rethrow;
+      rethrow; // Rethrow the caught error to maintain the original stack trace
     }
   }
 
@@ -101,22 +101,16 @@ class AuthProvider with ChangeNotifier {
   Future<Map<String, dynamic>?> getUserDetails() async {
     if (_token == null) return null;
 
-    try {
-      final response = await http.get(
-        Uri.parse('${AppConfig.apiUrl}user/$_userId'),
-        headers: {
-          'Authorization': 'Bearer $_token',
-        },
-      );
+    final response = await http.get(
+      Uri.parse('${AppConfig.apiUrl}user/$_userId'),
+      headers: {
+        'Authorization': 'Bearer $_token',
+      },
+    );
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        _logger.w('Failed to fetch user details. Status code: ${response.statusCode}');
-        return null;
-      }
-    } catch (error) {
-      _logger.e('Error fetching user details: $error');
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
       return null;
     }
   }
