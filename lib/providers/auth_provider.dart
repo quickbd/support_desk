@@ -22,19 +22,19 @@ class AuthProvider with ChangeNotifier {
   String? get email => _email;
 
   Future<void> login(String email, String password) async {
+
     try {
       final response = await http.post(
-        Uri.https('support.quickbd.net','api/login'),
-        headers: {'Content-Type': 'application/json',"Access-Control-Allow-Origin": "header",
-          'Accept': '*/*'}, // Add headers
-        body: json.encode({'email': email, 'password': password}),
+        Uri.parse('${AppConfig.apiUrl}login'),
+        headers: {'Content-Type': 'application/json'}, // Add headers
+        body: jsonEncode({'email': email, 'password': password}),
       );
-print(response.body);
+
       _logger.i('Login Status Code: ${response.statusCode}'); // Log status code
       _logger.i('Login Response Body: ${response.body}'); // Log response body
 
       if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
+        final responseData = jsonDecode(response.body);
         final data = responseData['data'];
 
         _token = data['api_token'];
@@ -52,11 +52,11 @@ print(response.body);
 
         notifyListeners();
       } else {
-        final errorResponse = json.decode(response.body);
-        throw Exception('Failed to login: ${errorResponse['message']}');
+        final errorResponse = jsonDecode(response.body);
+         throw Exception('Failed to login: ${errorResponse['message']}');
       }
     } catch (error) {
-      print(error);
+
       _logger.e('Error during login: $error');
       rethrow; // Rethrow the caught error to maintain the original stack trace
     }
