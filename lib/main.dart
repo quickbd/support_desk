@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
           '/login': (ctx) => const LoginView(),
           '/register': (ctx) => const RegisterView(),
           '/dashboard': (ctx) => const DashboardScreen(),
-          '/forget-password': (ctx) => ForgetPassword(),
+          '/forget-password': (ctx) => const ForgetPassword(),
         },
       ),
     );
