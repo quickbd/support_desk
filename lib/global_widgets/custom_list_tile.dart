@@ -1,14 +1,18 @@
-
 import 'package:flutter/material.dart';
 
 class CustomListTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final String? trailing;
+  final TextStyle? titleTextStyle; // Added titleTextStyle as an optional parameter
 
-  const CustomListTile({super.key, required this.title, required this.subtitle, this.trailing});
-
-
+  const CustomListTile({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+    this.titleTextStyle, // Made titleTextStyle optional
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,20 +24,39 @@ class CustomListTile extends StatelessWidget {
       ),
       child: ListTile(
         contentPadding: EdgeInsets.zero,
-        leading:   CircleAvatar(
+        leading: CircleAvatar(
           backgroundColor: Colors.grey.withOpacity(0.8),
-          child: Text(title[0],
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,)
-          )
+          child: Text(
+            title.isNotEmpty ? title[0] : '?', // Handle empty title case
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-        subtitle: Text(subtitle, style: TextStyle(color: Colors.black.withOpacity(0.5), )),
-
-        trailing: trailing !=null ? Text(trailing!, style: const TextStyle(color: Colors.red),): const SizedBox(),
+        title: Text(
+          title,
+          style: titleTextStyle ??
+              const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis, // Ensure text overflow handling
+              ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(
+            color: Colors.black.withOpacity(0.5),
+          ),
+        ),
+        trailing: trailing != null
+            ? Text(
+          trailing!,
+          style: const TextStyle(color: Colors.red),
+        )
+            : const SizedBox(),
       ),
     );
-
   }
 }

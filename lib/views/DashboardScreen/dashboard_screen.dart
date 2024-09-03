@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import 'package:support_desk/providers/auth_provider.dart';
+import 'package:support_desk/providers/services_provider.dart'; // Import ServicesProvider
 import '../../global_widgets/custom_home_item.dart';
 import '../../global_widgets/custom_list_tile.dart';
 import '../../utils/colors.dart';
+import '../MyServices/service_details_screen.dart';
 import '../activity/activity.dart';
-import '../send_money/receiver_view.dart';
+import '../MyServices/my_services_screen.dart';
+import '../MyInvoice/my_invoice_screen.dart';
+import '../SupportTicket/support_ticket_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -16,55 +20,51 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class DashboardScreenState extends State<DashboardScreen> {
-  String userName = '';
-  String userBalance = '\$0.00';
+  bool _isLoading = true; // Loading state
 
   @override
   void initState() {
     super.initState();
-    _checkLoginStatusAndLoadData();
+    _initialize();
   }
 
-  Future<void> _checkLoginStatusAndLoadData() async {
+  Future<void> _initialize() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final isLoggedIn = await authProvider.checkLoginStatus();
+    final servicesProvider = Provider.of<ServicesProvider>(context, listen: false);
 
+    final isLoggedIn = await authProvider.checkLoginStatus();
     if (!isLoggedIn) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/login');
       });
     } else {
-      _loadUserData();
-    }
-  }
-
-  Future<void> _loadUserData() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final userDetails = await authProvider.getUserDetails();
-
-    if (userDetails != null) {
+      // Load user details and services
+      await authProvider.loadUserDetails();
+      await servicesProvider.fetchServices();
       setState(() {
-        userName = userDetails['name']; // Replace with actual user name field
-        userBalance = '\$${userDetails['balance']}'; // Replace with actual user balance field
+        _isLoading = false; // Data is loaded, update the loading state
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final servicesProvider = Provider.of<ServicesProvider>(context); // Use ServicesProvider
     final size = MediaQuery.sizeOf(context);
+
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
           Container(
-            height: size.height * .35,
+            height: size.height * .20,
             width: size.width,
             decoration: BoxDecoration(
               color: AppColors.primary,
               borderRadius: const BorderRadius.only(
-                bottomRight: Radius.circular(40),
+                bottomRight: Radius.circular(0),
               ),
             ),
             child: Padding(
@@ -98,32 +98,11 @@ class DashboardScreenState extends State<DashboardScreen> {
 
                   // Name
                   Text(
-                    'Hello $userName',
+                    'Hello, ${authProvider.name ?? ''}', // Accessing name directly from AuthProvider
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.8),
                       fontSize: 18,
                     ),
-                  ),
-
-                  // Balance
-                  Column(
-                    children: [
-                      Text(
-                        userBalance,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Your Balance',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -139,19 +118,51 @@ class DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Row(
                       children: [
-                        CustomHomeItem(
-                          title: 'Send\nMoney',
-                          icon: Icons.send,
-                          onTab: () => Get.to(() => const ReceiverView()),
+                        Flexible(
+                          child: CustomHomeItem(
+                            title: 'My\nServices',
+                            icon: Icons.send,
+                            onTab: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const MyServicesScreen()),
+                              );
+                            },
+                          ),
                         ),
                         const SizedBox(
-                          width: 20,
+                          width: 10,
                         ),
-                        CustomHomeItem(
-                          title: 'Add\nMoney',
-                          icon: Icons.monetization_on,
-                          backgroundColor: Colors.white,
-                          itemColor: AppColors.primary,
+                        Flexible(
+                          child: CustomHomeItem(
+                            title: 'My\nInvoice',
+                            icon: Icons.wallet,
+                            backgroundColor: Colors.white,
+                            itemColor: AppColors.primary,
+                            onTab: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const MyInvoiceScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Flexible(
+                          child: CustomHomeItem(
+                            title: 'Support\nTicket',
+                            icon: Icons.support_agent,
+                            backgroundColor: Colors.white,
+                            itemColor: AppColors.primary,
+                            onTab: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SupportTicketScreen()),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -174,17 +185,36 @@ class DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 10,),
-                    // Activation
-                    ListView.builder(
+                    // Services
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator()) // Show loading indicator
+                        : servicesProvider.activities.isEmpty
+                        ? const Center(child: Text("No Service available"))
+                        : ListView.builder(
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
                       primary: false,
-                      itemCount: 15,
+                      itemCount: servicesProvider.activities.length,
                       itemBuilder: (context, index) {
-                        return const CustomListTile(
-                          title: 'Md Hasanat Zamil',
-                          subtitle: '7 days ago',
-                          trailing: '+300',
+                        final service = servicesProvider.activities[index];
+                        return InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ServiceDetailsScreen(
+                                  title: service['title'] ?? 'No Title',
+                                  subtitle: service['subtitle'] ?? 'No Subtitle',
+                                  trailing: service['trailing'] ?? 'No Trailing',
+                                ),
+                              ),
+                            );
+                          },
+                          child: CustomListTile(
+                            title: service['title'] ?? 'No Title',
+                            subtitle: service['subtitle'] ?? 'No Subtitle',
+                            trailing: service['trailing'] ?? 'No Trailing',
+                          ),
                         );
                       },
                     ),

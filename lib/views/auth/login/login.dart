@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:support_desk/views/auth/register/register.dart';
 import 'package:get/get.dart';
 import 'package:support_desk/providers/auth_provider.dart';
 import '../../../global_widgets/custom_appbar.dart';
 import '../../../global_widgets/custom_button.dart';
+import '../register/register.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -60,70 +60,92 @@ class LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: customAppBar(hideLeading: true),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 170.0,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(15.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-                const SizedBox(height: 20.0),
-                Column(
-                  children: [
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email Address',
-                        border: OutlineInputBorder(),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 170.0,
                       ),
-                    ),
-                    const SizedBox(height: 20.0),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 20.0),
-                    if (_isLoading)
-                      const CircularProgressIndicator()
-                    else
-                      CustomButton(
-                        title: 'Login',
-                        onTap: () => _login(context),
-                      ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Get.to(() => const RegisterView());
-                      },
-                      child: Text(
-                        'Having trouble login?',
+                      const SizedBox(height: 20.0),
+                      const Text(
+                        'Sign In',
                         style: TextStyle(
-                          color: Colors.black.withOpacity(0.5),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 30,
                         ),
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Get.to(() => const RegisterView());
-                      },
-                      child: const Text('Sign Up'),
-                    ),
-                  ],
+                      const Text(
+                        'Please enter your login details to continue your account',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      Column(
+                        children: [
+                          TextField(
+                            controller: _emailController,
+                            decoration: const InputDecoration(
+                              labelText: 'Email Address',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 20.0),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Password',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 20.0),
+                          if (_isLoading)
+                            const CircularProgressIndicator()
+                          else
+                            CustomButton(
+                              title: 'Login',
+                              onTap: () => _login(context),
+                            ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Get.to(() => const RegisterView()); // Navigation using Get
+                            },
+                            child: Text(
+                              'Having trouble login?',
+                              style: TextStyle(
+                                color: Colors.black.withOpacity(0.5),
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Get.to(() => const RegisterView()); // Navigation using Get
+                            },
+                            child: const Text('Sign Up'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

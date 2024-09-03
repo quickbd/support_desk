@@ -22,16 +22,15 @@ class AuthProvider with ChangeNotifier {
   String? get email => _email;
 
   Future<void> login(String email, String password) async {
-
     try {
       final response = await http.post(
         Uri.parse('${AppConfig.apiUrl}login'),
-        headers: {'Content-Type': 'application/json'}, // Add headers
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      _logger.i('Login Status Code: ${response.statusCode}'); // Log status code
-      _logger.i('Login Response Body: ${response.body}'); // Log response body
+      _logger.i('Login Status Code: ${response.statusCode}');
+      _logger.i('Login Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -53,12 +52,76 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
       } else {
         final errorResponse = jsonDecode(response.body);
-         throw Exception('Failed to login: ${errorResponse['message']}');
+        throw Exception('Failed to login: ${errorResponse['message']}');
       }
     } catch (error) {
-
       _logger.e('Error during login: $error');
-      rethrow; // Rethrow the caught error to maintain the original stack trace
+      rethrow;
+    }
+  }
+
+  Future<bool> requestPasswordReset(String mobileNumber) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.apiUrl}request-password-reset'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'mobile_number': mobileNumber}),
+      );
+
+      if (response.statusCode == 200) {
+        return true; // Success
+      } else {
+        return false; // Failure
+      }
+    } catch (error) {
+      Logger().e('Error during password reset request: $error');
+      return false; // Failure due to error
+    }
+  }
+
+
+
+
+  Future<bool> resetPassword(String mobileNumber, String newPassword) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.apiUrl}reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'mobile': mobileNumber, 'password': newPassword}),
+      );
+
+      _logger.i('Password Reset Status Code: ${response.statusCode}');
+      _logger.i('Password Reset Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return true; // Password reset successful
+      } else {
+        return false; // Password reset failed
+      }
+    } catch (error) {
+      _logger.e('Error during password reset: $error');
+      return false; // Failure due to error
+    }
+  }
+
+
+  Future<bool> loginWithNewPassword(String mobileNumber, String newPassword) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.apiUrl}login-with-new-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'mobile_number': mobileNumber, 'password': newPassword}),
+      );
+
+      if (response.statusCode == 200) {
+        // Handle successful login, such as storing the token
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      Logger().e('Error during login with new password: $error');
+      return false;
     }
   }
 
@@ -100,20 +163,35 @@ class AuthProvider with ChangeNotifier {
     return prefs.getString('userId');
   }
 
-  Future<Map<String, dynamic>?> getUserDetails() async {
-    if (_token == null) return null;
+  Future<void> loadUserDetails() async {
+    if (_token == null || _userId == null) return;
 
-    final response = await http.get(
-      Uri.parse('${AppConfig.apiUrl}user/$_userId'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.apiUrl}user/$_userId'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      return null;
+      if (response.statusCode == 200) {
+        final userDetails = jsonDecode(response.body);
+        _name = userDetails['name'];
+        _phone = userDetails['phone'];
+        _email = userDetails['email'];
+
+        // Optionally update SharedPreferences with the new details
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('name', _name!);
+        await prefs.setString('phone', _phone!);
+        await prefs.setString('email', _email!);
+
+        notifyListeners();
+      } else {
+        throw Exception('Failed to load user details');
+      }
+    } catch (error) {
+      _logger.e('Error loading user details: $error');
     }
   }
 }
