@@ -4,14 +4,14 @@ class CustomListTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final String? trailing;
-  final TextStyle? titleTextStyle; // Added titleTextStyle as an optional parameter
+  final TextStyle? titleTextStyle;
 
   const CustomListTile({
     super.key,
     required this.title,
     required this.subtitle,
     this.trailing,
-    this.titleTextStyle, // Made titleTextStyle optional
+    this.titleTextStyle,
   });
 
   @override
@@ -36,12 +36,12 @@ class CustomListTile extends StatelessWidget {
         ),
         title: Text(
           title,
+          maxLines: 1, // Ensure the title doesn't overflow
+          overflow: TextOverflow.ellipsis, // Ellipsis for overflow
           style: titleTextStyle ??
               const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis, // Ensure text overflow handling
               ),
         ),
         subtitle: Text(
