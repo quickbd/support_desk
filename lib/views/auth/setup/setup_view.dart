@@ -4,7 +4,8 @@ import 'package:support_desk/controllers/profile_setup_controller.dart';
 import 'package:support_desk/global_widgets/custom_appbar.dart';
 import 'package:support_desk/global_widgets/custom_button.dart';
 import 'package:support_desk/global_widgets/custom_field.dart';
-import '../../home/home_view.dart';
+import 'package:support_desk/views/DashboardScreen/dashboard_screen.dart';
+
 
 class ProfileSetupView extends StatelessWidget {
   ProfileSetupView({Key? key}) : super(key: key);
@@ -79,7 +80,7 @@ class ProfileSetupView extends StatelessWidget {
                   children: [
                     CustomButton(
                       title: "Complete Setup",
-                      onTap: () => Get.to(() => const HomeView()),
+                      onTap: () => Get.to(() => const DashboardScreen()),
                     ),
                   ],
                 ),

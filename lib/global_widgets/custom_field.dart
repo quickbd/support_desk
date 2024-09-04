@@ -2,26 +2,40 @@ import 'package:flutter/material.dart';
 
 class CustomField extends StatelessWidget {
   final String title;
-  final TextEditingController? controller;
-  final bool obscureText;
+  final bool? secured;
+  final IconData? prefixIcon;
+  final TextInputType? keyboardType;
+
+
 
   const CustomField({
-    Key? key,
+    super.key,
     required this.title,
-    this.controller,
-    this.obscureText = false,
-  }) : super(key: key);
+    this.secured,
+    this.prefixIcon,
+    this.keyboardType,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
+    return  TextFormField(
+      keyboardType: keyboardType,
+      obscureText: secured ?? false,
       decoration: InputDecoration(
-        labelText: title,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
+          prefixIcon: prefixIcon != null ?  Icon(prefixIcon, color: Colors.black.withOpacity(0.5)): null,
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(40),
+              borderSide: const BorderSide(
+                  color: Colors.black38
+              )
+          ),
+          focusedBorder : OutlineInputBorder(
+              borderRadius: BorderRadius.circular(40),
+              borderSide: const BorderSide(
+                  color: Colors.blueAccent
+              )
+          ),
+          hintText: title
       ),
     );
   }
